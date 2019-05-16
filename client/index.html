@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Meta Tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>Game</title>
+  </head>
+  <body>
+    <!-- Content -->
+    <div class="container">
+        <h1>Game</h1>
+        <canvas id="canvas"></canvas>
+    </div>
+
+  <!-- Javascript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+  
+  <script>
+    /* Canvas Setup */
+    var canvas = document.getElementById('canvas');
+    canvas.width = 1200;
+    canvas.height = 600;
+    canvas.style = "background: #F0F0F0";
+    ctx = canvas.getContext('2d');
+  </script>
+
+  <script>
+    // game
+    var game_socket = io('http://localhost:5000/game');
+    var game_state = {};
+
+    game_socket.on('send game state', function(new_game_state) {
+      game_state = new_game_state;
+    });
+
+    var game_loop = function() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      for (let player_key in game_state.players) {
+        let player = game_state.players[player_key];
+        ctx.fillStyle = player.colour;
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+      }
+    };
+
+    setInterval(game_loop, 16);
+  </script>
+
+  <script>
+  // update player direction 
+  function key_down(e) {
+    /* Checks for key presses */
+    var code = e.keyCode;
+    switch (code) {
+      case 65: player.dirx = -1; break;
+      case 87: player.diry = -1; break;
+      case 68: player.dirx = 1; break;
+      case 83: player.diry = 1; break;
+    }
+    update_direction();
+  }
+
+  function key_up(e) {
+    /* Stops player movement if they let of the key that goes with the direction */
+    var code = e.keyCode;
+    switch (code) {
+      case 65: if (player.dirx === -1) {player.dirx = 0;} break;
+      case 87: if (player.diry === -1) {player.diry = 0;} break;
+      case 68: if (player.dirx === 1) {player.dirx = 0;} break;
+      case 83: if (player.diry === 1) {player.diry = 0;} break;
+    }
+    update_direction();
+  }
+
+  window.addEventListener('keydown', this.key_down, false);
+  window.addEventListener('keyup', this.key_up, false);
+
+  var player = {dirx: 0, diry: 0};
+  function update_direction() {
+    game_socket.emit('update player direction', player)
+  }
+  </script>
+
+  </body>
+  
+</html>
